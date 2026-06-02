@@ -9,13 +9,13 @@
                 "ssm:GetParameters"
             ],
             "Resource": [
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/db/password",
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/db/user",
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/db/name",
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/db/port",
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/db/host",
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/cors/allowed-origins",
-                "arn:aws:ssm:sa-east-1:412914223528:parameter/book-review/prod/auth/jwt-secret"
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/db/password",
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/db/user",
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/db/name",
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/db/port",
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/db/host",
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/cors/allowed-origins",
+                "arn:aws:ssm:av-zone-1:123456789012:parameter/book-review/prod/auth/jwt-secret"
             ]
         },
         {
