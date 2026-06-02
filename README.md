@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Book Review App Deployment README
 
 ## Overview
@@ -435,3 +436,7 @@ sudo -u appuser bash -lc 'cd /srv/book-review-app/backend && pwd'
 - Let app users run code, not manage services.
 - Use security groups to limit traffic between tiers.
 
+=======
+# book-review-aws-refactor
+A refactored 3 tiers application from loading credentials locally and low security, to loading credentials dynamically, improved security and availability.
+>>>>>>> 3574c17046fc8a0d1346d3a586e0f4bbd38e033e
