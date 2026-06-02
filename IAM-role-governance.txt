@@ -1,0 +1,30 @@
+roles:
+
+  AccountAdministrator:
+    scope: AWS Account
+    access_level: Full
+
+  InfrastructureEngineer:
+    scope:
+      - Networking
+      - Compute
+      - Database
+      - LoadBalancing
+
+    access_level: Provisioning
+
+  EC2Operator:
+    scope:
+      - EC2
+
+    access_level:
+      - Launch
+      - Start
+      - Stop
+      - Terminate
+
+    denied:
+      - IAM
+      - RDS
+      - VPC
+      - Billing

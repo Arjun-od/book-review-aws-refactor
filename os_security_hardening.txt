@@ -1,0 +1,148 @@
+os_security_hardening:
+  goal:
+    - Run frontend and backend as separate non-root users.
+    - Prevent frontend user from reading backend files.
+    - Prevent app users from editing systemd or nginx config.
+    - Let nginx proxy traffic without reading app source files.
+    - Reduce damage if frontend, backend, or nginx is compromised.
+
+  users:
+    frontend:
+      user: webapp
+      purpose: Runs the Next.js frontend only.
+      should_own:
+        - /srv/book-review-app/frontend
+      should_not_own:
+        - /etc/systemd
+        - /etc/nginx
+        - /srv/book-review-app/backend
+
+    backend:
+      user: appuser
+      purpose: Runs the Node.js backend only.
+      should_own:
+        - /srv/book-review-app/backend
+      should_not_own:
+        - /etc/systemd
+        - /etc/nginx
+        - /srv/book-review-app/frontend
+
+    nginx:
+      master_process: root
+      worker_process: www-data
+      purpose: Proxies browser traffic to frontend and API traffic to backend.
+      needs_app_file_access: false
+
+  directories:
+    app_root:
+      path: /srv/book-review-app
+      owner: root
+      group: root
+      permissions: "0711"
+      reason: Allows app users to traverse into their own folders but not list the full app root.
+
+    frontend:
+      path: /srv/book-review-app/frontend
+      owner: webapp
+      group: webapp
+      directory_permissions: "0750"
+      file_permissions: "0640"
+      reason: Only webapp can read frontend files.
+
+    backend:
+      path: /srv/book-review-app/backend
+      owner: appuser
+      group: appuser
+      directory_permissions: "0750"
+      file_permissions: "0640"
+      reason: Only appuser can read backend files.
+
+    nginx_config:
+      path: /etc/nginx
+      owner: root
+      group: root
+      writable_by_app_users: false
+      reason: Prevent compromised app users from changing proxy routes.
+
+    systemd_config:
+      path: /etc/systemd/system
+      owner: root
+      group: root
+      writable_by_app_users: false
+      reason: Prevent app users from changing service user, environment, or startup commands.
+
+  systemd:
+    frontend_service:
+      name: book-review-frontend
+      runs_as_user: webapp
+      working_directory: /srv/book-review-app/frontend
+      should_be_able_to:
+        - start Next.js
+        - read frontend files
+        - bind only to localhost port 3000
+      should_not_be_able_to:
+        - read backend files
+        - edit nginx config
+        - edit systemd service files
+        - restart itself without admin/root
+
+    backend_service:
+      name: app.service
+      runs_as_user: appuser
+      working_directory: /srv/book-review-app/backend
+      should_be_able_to:
+        - start Node.js backend
+        - read backend files
+        - fetch secrets from AWS SSM through IAM role
+      should_not_be_able_to:
+        - read frontend files
+        - edit nginx config
+        - edit systemd service files
+        - restart itself without admin/root
+
+  nginx:
+    expected_process_model:
+      master: root
+      workers: www-data
+    proxy_rules:
+      frontend_pages:
+        from: /
+        to: http://127.0.0.1:3000
+      backend_api:
+        from: /api/
+        to: internal_backend_alb_dns
+    security_notes:
+      - Nginx does not need read access to frontend source files when proxying to Next.js.
+      - Nginx config should be writable only by root.
+      - If nginx config is writable by app users, an attacker could redirect traffic or steal tokens.
+
+  commands_to_check:
+    process_owners:
+      - "ps -eo user,pid,ppid,cmd | grep -E 'nginx|node|next' | grep -v grep"
+
+    listening_ports:
+      - "sudo ss -ltnp"
+
+    service_users:
+      - "systemctl show book-review-frontend -p User -p Group -p WorkingDirectory"
+      - "systemctl show app.service -p User -p Group -p WorkingDirectory"
+
+    sudo_access:
+      - "sudo -l -U webapp"
+      - "sudo -l -U appuser"
+
+    permissions:
+      - "ls -ld /srv /srv/book-review-app /srv/book-review-app/frontend /srv/book-review-app/backend"
+      - "ls -l /etc/nginx/sites-available"
+      - "ls -l /etc/systemd/system"
+
+  expected_results:
+    frontend_process_owner: webapp
+    backend_process_owner: appuser
+    nginx_master_owner: root
+    nginx_worker_owner: www-data
+    app_root_permission: "0711"
+    frontend_owner: webapp:webapp
+    backend_owner: appuser:appuser
+    app_users_can_manage_systemd: false
+    app_users_can_edit_nginx: false

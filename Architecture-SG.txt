@@ -1,0 +1,32 @@
+Architecture:
+
+  PublicALB:
+    Inbound:
+      - HTTP:80 from Internet
+      - HTTPS:443 from Internet
+    Outbound:
+      - HTTP:80 to WebTier
+
+  WebTier:
+    Inbound:
+      - HTTP:80 from PublicALB
+    Outbound:
+      - HTTP:3001 to InternalALB
+      - HTTPS:443 to AWS Services
+
+  InternalALB:
+    Inbound:
+      - HTTP:80 from WebTier
+    Outbound:
+      - HTTP:3001 to AppTier
+
+  AppTier:
+    Inbound:
+      - HTTP:3001 from InternalALB
+    Outbound:
+      - MySQL:3306 to RDS
+      - HTTPS:443 to SSM Parameter Store
+
+  RDS:
+    Inbound:
+      - MySQL:3306 from AppTier
